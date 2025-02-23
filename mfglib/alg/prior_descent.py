@@ -38,7 +38,8 @@ class PriorDescent(Algorithm):
         Information Processing Systems 32 (2019). https://arxiv.org/abs/1901.09585
     """
 
-    def __init__(self, eta: float = 1.0, n_inner: int | None = None) -> None:
+    def __init__(self, eta: float = 1.0, n_inner: int | None = None, 
+                 update_initial: bool = False, update_eta: bool = False) -> None:
         """Prior Descent algorithm.
 
         Attributes
@@ -56,6 +57,8 @@ class PriorDescent(Algorithm):
                 raise ValueError("if not None, `n_inner` must be a positive integer")
         self.eta = eta
         self.n_inner = n_inner
+        self.update_initial = update_initial
+        self.update_eta = update_eta
 
     def __str__(self) -> str:
         """Represent algorithm instance and associated parameters with a string."""
@@ -128,15 +131,22 @@ class PriorDescent(Algorithm):
 
         t = time.time()
         for n in range(1, max_iter + 1):
+            # Update the learning rate
+            if self.update_eta:
+                self.eta *= n
             # Mean-field corresponding to the policy
             L = mean_field(env_instance, pi)
 
             # Q-function corresponding to the mean-field
             Q = QFn(env_instance, L, verify_integrity=False).optimal() / self.eta
 
-            # Compute the next policy
-            Q_exp = torch.exp(Q)
-            q_Q_exp = q.mul(Q_exp)
+            # Subtract the maximum value along the appropriate dimension to stabilize exponentiation
+            Q_max = Q.max(dim=-1, keepdim=True)[0]  # adjust the dimension based on your Q's shape
+            Q_shifted = Q - Q_max
+
+            # Compute the exponentials in a numerically stable way
+            Q_exp = torch.exp(Q_shifted)
+            q_Q_exp = q * Q_exp
             q_Q_exp_sum_rptd = (
                 q_Q_exp.flatten(start_dim=1 + l_s)
                 .sum(-1)
@@ -168,6 +178,11 @@ class PriorDescent(Algorithm):
                 if verbose:
                     _print_solve_complete(seconds_elapsed=runtimes[n])
                 return solutions, scores, runtimes
+            
+            if self.update_initial and self.n_inner == 1:
+                mu_final = torch.sum(L, axis=2)[-1]
+                mu_final /= torch.sum(mu_final)
+                env_instance.update_initial_distribution(mu_final)
 
         if verbose:
             _print_solve_complete(seconds_elapsed=time.time() - t)

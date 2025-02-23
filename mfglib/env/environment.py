@@ -71,6 +71,22 @@ class Environment:
 
     def prob(self, t: int, L_t: torch.Tensor) -> torch.Tensor:
         return self.transition_fn(self, t, L_t)
+    
+    def update_initial_distribution(self, mu0: torch.Tensor) -> None:
+        """Update the initial state distribution.
+
+        Args
+        ----
+        mu0 : torch.Tensor
+            New initial state distribution with shape ``S``.
+
+        Returns
+        -------
+        None
+        """
+        if (mu0.sum() - 1.0).abs() > 1e-6:
+            raise ValueError("invalid distribution provided for mu0")
+        self.mu0 = mu0
 
     @classmethod
     def beach_bar(

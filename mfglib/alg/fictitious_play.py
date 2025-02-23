@@ -44,7 +44,7 @@ class FictitiousPlay(Algorithm):
 
     """
 
-    def __init__(self, alpha: float | None = None) -> None:
+    def __init__(self, alpha: float | None = None, update_initial: bool = False) -> None:
         """Fictitious Play algorithm.
 
         Attributes
@@ -57,6 +57,7 @@ class FictitiousPlay(Algorithm):
             if not isinstance(alpha, (int, float)) or not 0 <= alpha <= 1:
                 raise ValueError("if not None, `alpha` must be a float in [0, 1]")
         self.alpha = alpha
+        self.update_initial = update_initial
 
     def __str__(self) -> str:
         """Represent algorithm instance and associated parameters with a string."""
@@ -177,6 +178,11 @@ class FictitiousPlay(Algorithm):
                 if verbose:
                     _print_solve_complete(seconds_elapsed=runtimes[n])
                 return solutions, scores, runtimes
+
+            if self.update_initial:
+                mu_final = torch.sum(L, axis=2)[-1]
+                mu_final /= torch.sum(mu_final)
+                env_instance.update_initial_distribution(mu_final)
 
         if verbose:
             _print_solve_complete(seconds_elapsed=time.time() - t)
