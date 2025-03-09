@@ -126,6 +126,36 @@ class Environment:
             reward_fn=RewardFn(n, bar_loc, log_eps),
             transition_fn=TransitionFn(n, p_still),
         )
+    
+    @classmethod
+    def bottleneck(
+        cls,
+        T: int = 3,
+        M: int = 40,
+        inertia: float = 0,
+        alpha: float = 10.0,
+        beta: float = 5.0,
+        gamma: float = 15.0,
+        r: float = 2.0,
+        inflow: float = 6000.0,
+        Cap: float = 3000.0,
+        mu0: Literal["uniform"] | torch.Tensor = "uniform",
+    ) -> Environment:
+        """Bottleneck environment.
+        """
+        from mfglib.env.examples.bottleneck import RewardFn, TransitionFn
+
+        dt = T/M
+
+        return cls(
+            T=T,
+            S=(M,),
+            A=(M,),
+            mu0=mu0 if isinstance(mu0, torch.Tensor) else torch.ones(M) / M,
+            r_max=max(gamma * (T-r) * dt, alpha * r * dt) + inertia * M * dt,
+            reward_fn=RewardFn(inertia, alpha, beta, gamma, r, inflow, Cap, dt),
+            transition_fn=TransitionFn(M),
+        )
 
     @classmethod
     def building_evacuation(

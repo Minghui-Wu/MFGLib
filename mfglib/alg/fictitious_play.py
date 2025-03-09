@@ -180,9 +180,16 @@ class FictitiousPlay(Algorithm):
                 return solutions, scores, runtimes
 
             if self.update_initial:
+                # direct update of the initial distribution
+                # mu_final = torch.sum(L, axis=2)[-1]
+                # mu_final /= torch.sum(mu_final)
+                # env_instance.update_initial_distribution(mu_final)
+                
+                # Gradual update of the initial distribution
                 mu_final = torch.sum(L, axis=2)[-1]
-                mu_final /= torch.sum(mu_final)
-                env_instance.update_initial_distribution(mu_final)
+                mu_next_initial = (1 - weight) * env_instance.mu0 + weight * mu_final
+                mu_next_initial /= torch.sum(mu_next_initial)
+                env_instance.update_initial_distribution(mu_next_initial)
 
         if verbose:
             _print_solve_complete(seconds_elapsed=time.time() - t)
