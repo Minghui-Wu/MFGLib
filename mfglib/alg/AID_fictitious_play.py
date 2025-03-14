@@ -142,16 +142,15 @@ class AIDFictitiousPlay(Algorithm):
             L_br = mean_field(env_instance, pi_br)
 
             diff = (torch.sum(L, axis=2) - torch.sum(L_br, axis=2))**2
-            diff = torch.sum(diff)
+            diff = torch.sum(diff) * env_instance.S[0]
             
             # Update mean-field
             weight = self.alpha if self.alpha else 1 / (n + 1)
-            L = (1 - weight) * L + weight * L_br
+            
             mu0_prev = torch.sum(L, axis=2)[0]
             mu0_prev /= torch.sum(mu0_prev)
-            mu0_new = torch.sum(L_br, axis=2)[0]
-            mu0_new /= torch.sum(mu0_new)
-            mu0 = (1 - weight) * mu0_prev + weight * mu0_new
+
+            mu0 = (1 - weight) * mu0_prev + weight * mu_final
 
             env_instance.update_initial_distribution(mu0)
 
@@ -167,7 +166,6 @@ class AIDFictitiousPlay(Algorithm):
                 .repeat(A + ones_ts)
                 .permute(ats_to_tsa)
             )
-            weight = self.alpha if self.alpha else 1 / (n + 1)
 
             pi_next_num = (1 - weight) * pi.mul(mu_rptd) + weight * pi_br.mul(
                 mu_br_rptd
@@ -176,7 +174,6 @@ class AIDFictitiousPlay(Algorithm):
             pi = pi_next_num.div(pi_next_den).nan_to_num(
                 nan=1 / n_a, posinf=1 / n_a, neginf=1 / n_a
             )  # using uniform distribution when divided by zero
-
 
 
             solutions.append(pi.clone().detach())
