@@ -69,8 +69,8 @@ class FictitiousPlay(Algorithm):
         *,
         pi: Literal["uniform"] | torch.Tensor = "uniform",
         max_iter: int = 100,
-        atol: float | None = 1e-5,
-        rtol: float | None = 1e-5,
+        atol: float | None = 1e-3,
+        rtol: float | None = 1e-3,
         verbose: bool = False,
     ) -> tuple[list[torch.Tensor], list[float], list[float]]:
         """Run the algorithm and solve for a Nash-Equilibrium policy.
