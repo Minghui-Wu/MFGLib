@@ -94,7 +94,7 @@ class TwoScaleLearning(Algorithm):
 
         pi = _ensure_free_tensor(pi, env_instance)
         L = mean_field(env_instance, pi)
-        mu = torch.sum(L, axis=2)
+        mu = L.sum(dim=tuple(range(2, L.ndim)))
 
         solutions_pi = [pi]
         solutions_IC = [mu[0]]
@@ -129,7 +129,7 @@ class TwoScaleLearning(Algorithm):
         for n in range(1, max_iter + 1):
             # Mean-field corresponding to the policy
             L = mean_field(env_instance, pi)
-            mu = torch.sum(L, axis=2)
+            mu = L.sum(dim=tuple(range(2, L.ndim)))
 
             # Q-function corresponding to the policy and mean-field
             Q = QFn(env_instance, L, verify_integrity=False).for_policy(pi)
@@ -149,7 +149,7 @@ class TwoScaleLearning(Algorithm):
             )
 
             L = mean_field(env_instance, pi)
-            mu = torch.sum(L, axis=2)
+            mu = L.sum(dim=tuple(range(2, L.ndim)))
             solutions_pi.append(pi.clone().detach())
             solutions_IC.append(mu[0].clone().detach())
             scores_exp.append(exploitability_score(env_instance, pi))
@@ -162,13 +162,13 @@ class TwoScaleLearning(Algorithm):
             if verbose:
                 _print_fancy_table_row(
                     n=n,
-                    score_n=scores_exp[n],
-                    score_0=scores_exp[0],
+                    score_n=max(scores_exp[n], scores_diff[n]),
+                    score_0=max(scores_exp[0], scores_diff[0]),
                     argmin=argmin,
                     runtime_n=runtimes[n],
                 )
 
-            if _trigger_early_stopping(scores_exp[0], scores_exp[n], atol, rtol):
+            if _trigger_early_stopping(scores_exp[0], scores_exp[n], atol, rtol) and _trigger_early_stopping(scores_diff[0], scores_diff[n], atol, rtol):
                 if verbose:
                     _print_solve_complete(seconds_elapsed=runtimes[n])
                 return solutions_pi, solutions_IC, scores_exp, scores_diff, runtimes

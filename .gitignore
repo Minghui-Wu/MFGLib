@@ -1,7 +1,7 @@
 __pycache__
 .DS_Store
 .ipynb_checkpoints
-*.ipynb
+.ipynb
 *.pyc
 poetry.lock
 poetry.toml
@@ -11,3 +11,4 @@ poetry.toml
 docs/build
 docs/jupyter_execute
 .coverage
+*.pt
