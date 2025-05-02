@@ -130,7 +130,7 @@ class AIDFictitiousPlay(Algorithm):
             return solutions, scores, runtimes
 
         t = time.time()
-        for n in range(1, max_iter + 1):
+        for n in range(0, max_iter):
             # Compute the greedy policy and its induced mean-field
             L = mean_field(env_instance, pi)
 

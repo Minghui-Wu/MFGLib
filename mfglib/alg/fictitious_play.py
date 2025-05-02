@@ -130,9 +130,11 @@ class FictitiousPlay(Algorithm):
             return solutions, scores, runtimes
 
         t = time.time()
-        for n in range(1, max_iter + 1):
+        for n in range(0, max_iter):
             # Compute the greedy policy and its induced mean-field
             L = mean_field(env_instance, pi)
+            mu = torch.sum(L, axis=2)
+            diff = torch.sum((mu[0] - mu[-1])**2)
             pi_br = Greedy_Policy(env_instance, L)
             L_br = mean_field(env_instance, pi_br)
 
@@ -159,8 +161,20 @@ class FictitiousPlay(Algorithm):
                 nan=1 / n_a, posinf=1 / n_a, neginf=1 / n_a
             )  # using uniform distribution when divided by zero
 
+            if self.update_initial:
+                # direct update of the initial distribution
+                # mu_final = torch.sum(L, axis=2)[-1]
+                # mu_final /= torch.sum(mu_final)
+                # env_instance.update_initial_distribution(mu_final)
+                
+                # Gradual update of the initial distribution
+                mu_final = torch.sum(L, axis=2)[-1]
+                mu_next_initial = (1 - weight) * env_instance.mu0 + weight * mu_final
+                mu_next_initial /= torch.sum(mu_next_initial)
+                env_instance.update_initial_distribution(mu_next_initial)
+
             solutions.append(pi.clone().detach())
-            scores.append(exploitability_score(env_instance, pi))
+            scores.append(exploitability_score(env_instance, pi) + diff)
             if scores[n] < scores[argmin]:
                 argmin = n
             runtimes.append(time.time() - t)
@@ -179,17 +193,6 @@ class FictitiousPlay(Algorithm):
                     _print_solve_complete(seconds_elapsed=runtimes[n])
                 return solutions, scores, runtimes
 
-            if self.update_initial:
-                # direct update of the initial distribution
-                # mu_final = torch.sum(L, axis=2)[-1]
-                # mu_final /= torch.sum(mu_final)
-                # env_instance.update_initial_distribution(mu_final)
-                
-                # Gradual update of the initial distribution
-                mu_final = torch.sum(L, axis=2)[-1]
-                mu_next_initial = (1 - weight) * env_instance.mu0 + weight * mu_final
-                mu_next_initial /= torch.sum(mu_next_initial)
-                env_instance.update_initial_distribution(mu_next_initial)
 
         if verbose:
             _print_solve_complete(seconds_elapsed=time.time() - t)

@@ -1,7 +1,6 @@
 __pycache__
 .DS_Store
 .ipynb_checkpoints
-*.ipynb
 *.pyc
 poetry.lock
 poetry.toml
