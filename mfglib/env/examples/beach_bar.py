@@ -28,7 +28,6 @@ class RewardFn:
         points = torch.stack((torch.cos(angles), torch.sin(angles)), dim=1)
         bar_point = points[bar_loc]
         self.c1 = -torch.norm(points - bar_point, dim=1).unsqueeze(-1).repeat(1, 3)
-        print(self.c1.shape)
 
         self.c2 = -torch.tensor([1, 0, 1]).repeat(n, 1) / n
         self.log_eps = log_eps
