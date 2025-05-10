@@ -128,6 +128,45 @@ class Environment:
         )
     
     @classmethod
+    def beach_bar_state(
+        cls,
+        T: int = 2,
+        n: int = 4,
+        bar_loc: int = 2,
+        log_eps: float = 1e-20,
+        p_still: float = 0.5,
+        mu0: Literal["uniform"] | torch.Tensor = "uniform",
+    ) -> Environment:
+        """Beach Bar environment.
+
+        The beach bar process is a Markov Decision Process with :math:`|X|`
+        states disposed on a one dimensional torus (:math:`X = {0,..., |X|-1}`), which
+        represents a beach. A bar is located in one of the states. As the
+        weather is very hot, players want to be as close as possible to the bar,
+        while keeping away from too crowded areas.[#1bb]_
+
+        .. [#1bb] Perrin, Sarah, et al. "Fictitious play for mean field games:
+            Continuous time analysis and applications." Advances in Neural
+            Information Processing Systems 33 (2020): 13199-13213.
+        """
+        from mfglib.env.examples.beach_bar_state import RewardFn, TransitionFn
+
+        if bar_loc < 0 or bar_loc > n - 1:
+            raise ValueError("bar_loc must be between zero and n-1 (inclusive)")
+        if p_still < 0 or p_still > 1:
+            raise ValueError("p_still must be a valid probability")
+
+        return cls(
+            T=T,
+            S=(n,),
+            A=(3,),
+            mu0=mu0 if isinstance(mu0, torch.Tensor) else torch.ones(n) / n,
+            r_max=n,
+            reward_fn=RewardFn(n, bar_loc, log_eps),
+            transition_fn=TransitionFn(n, p_still),
+        )
+    
+    @classmethod
     def beach_bar_terminal(
         cls,
         T: int = 2,

@@ -5,6 +5,7 @@ from mfglib.alg.online_mirror_descent import OnlineMirrorDescent
 from mfglib.alg.prior_descent import PriorDescent
 from mfglib.alg.AID_fictitious_play import AIDFictitiousPlay
 from mfglib.alg.two_scale import TwoScaleLearning
+from mfglib.alg.two_scale_FP import TwoScaleLearningFP
 
 
 __all__ = [
@@ -14,5 +15,6 @@ __all__ = [
     "OnlineMirrorDescent",
     "PriorDescent",
     "OccupationMeasureInclusion",
-    "TwoScaleLearning"
+    "TwoScaleLearning",
+    "TwoScaleLearningFP",
 ]
